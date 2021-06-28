@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+
+import threading
+from time import sleep
+from os import environ
+from os.path import join, dirname, realpath
+
+from dotenv import load_dotenv
+
+from server import Server
+
+projectRoot = realpath(dirname(__file__) + '/..')
+
+dotenv_path = join(projectRoot, '.env')
+load_dotenv(dotenv_path)
+
+ipAddress = environ.get('IP_ADDRESS')
+port = environ.get('PORT')
+
+server = Server(ipAddress, int(port))
+
+
+def clientThread(connection, address):
+    connection.sendall(b'Welcome to this chatroom!')
+
+    while True:
+        try:
+            message = connection.recv(2048).decode('utf-8')
+            if message:
+                name = address[0]
+                msg = f'<{name}>: {message}'
+                print(msg)
+                server.broadcast(address, msg)
+            else:
+                server.remove(address)
+        except:
+            continue
+        sleep(1)
+
+
+while True:
+    connection, address = server.accept()
+    print(f'{address[0]} connected')
+    thread = threading.Thread(target=clientThread, args=(connection, address))
+    thread.start()
+    sleep(1)
