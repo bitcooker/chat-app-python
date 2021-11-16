@@ -21,18 +21,26 @@ server = Server(ipAddress, int(port))
 
 
 def clientThread(connection, address):
-    connection.sendall(b'Welcome to this chatroom!')
+    connection.sendall(b'Welcome to this chatroom!\n')
 
     while True:
         try:
-            message = connection.recv(2048).decode('utf-8')
+            message: str = connection.recv(2048).decode('utf-8')
             if message:
+                if message.startswith('/online'):
+                    online = len(server.clients)
+                    msg = f'online: {online}\n'
+                    connection.sendall(msg.encode('utf-8'))
+                    continue
+
                 name = address[0]
                 msg = f'<{name}>: {message}'
-                print(msg)
+                print(msg, end='')
                 server.broadcast(address, msg)
             else:
                 server.remove(address)
+                print(f'{address[0]} disconnected')
+                break
         except:
             continue
         sleep(1)

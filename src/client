@@ -18,20 +18,36 @@ ipAddress = environ.get('IP_ADDRESS')
 port = environ.get('PORT')
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.connect((ipAddress, int(port)))
+try:
+    server.connect((ipAddress, int(port)))
+except ConnectionRefusedError:
+    print('Cannot connect to server')
+    sys.exit(1)
 
 while True:
-    socketsList = [sys.stdin, server]
+    try:
+        socketsList = [sys.stdin, server]
 
-    readSockets, writeSocket, errorSocket = select.select(socketsList, [], [])
+        readSockets, writeSocket, errorSocket = select.select(
+            socketsList, [], [])
 
-    for socks in readSockets:
-        if socks == server:
-            message = socks.recv(2048).decode('utf-8')
-            print(message)
-        else:
-            message = sys.stdin.readline()
-            server.sendall(message.encode('utf-8'))
-            print(f'<You>: {message}')
+        for socks in readSockets:
+            if socks == server:
+                message: str = socks.recv(2048).decode('utf-8')
+                if message.endswith('\n'):
+                    print(message, end='')
+                else:
+                    print(message)
+            else:
+                message = sys.stdin.readline()
+                if not message.startswith('/'):
+                    server.sendall(message.encode('utf-8'))
+                    print(f'\x1b[A<You>: {message}', end='')
+                elif message.startswith('/exit'):
+                    sys.exit(1)
+                else:
+                    server.sendall(message.encode('utf-8'))
             sys.stdout.flush()
-    sleep(1)
+        sleep(1)
+    except KeyboardInterrupt:
+        sys.exit(0)
