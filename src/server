@@ -35,7 +35,10 @@ def clientThread(connection, address):
 
                 name = address[0]
                 msg = f'<{name}>: {message}'
-                print(msg, end='')
+                if message.endswith('\n'):
+                    print(msg, end='')
+                else:
+                    print(message)
                 server.broadcast(address, msg)
             else:
                 server.remove(address)
