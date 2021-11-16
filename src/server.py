@@ -6,7 +6,7 @@ class Server:
     MAX_CLIENTS = 5
 
     def __init__(self, ipAddress: str, port: str) -> None:
-        self.clients: dict[str, socket.SocketIO] = dict()
+        self.clients: dict[socket.AddressInfo, socket.SocketIO] = dict()
 
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -18,7 +18,7 @@ class Server:
         self.clients[address] = connection
         return connection, address
 
-    def broadcast(self, address: str, message: str) -> None:
+    def broadcast(self, address: socket.AddressInfo, message: str) -> None:
         for addr, client in self.clients.items():
             if addr != address:
                 try:
@@ -27,5 +27,5 @@ class Server:
                     client.close()
                     del self.clients[address]
 
-    def remove(self, client: str):
+    def remove(self, client: socket.AddressInfo):
         del self.clients[client]

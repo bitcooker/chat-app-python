@@ -33,25 +33,32 @@ def clientThread(connection, address):
                     connection.sendall(msg.encode('utf-8'))
                     continue
 
-                name = address[0]
+                name = f"{address[0]} ({address[1]})"
                 msg = f'<{name}>: {message}'
-                if message.endswith('\n'):
+                if msg.endswith('\n'):
                     print(msg, end='')
                 else:
-                    print(message)
+                    print(msg)
                 server.broadcast(address, msg)
             else:
                 server.remove(address)
-                print(f'{address[0]} disconnected')
+                name = f"{address[0]} ({address[1]})"
+                print(f'{name} disconnected')
                 break
+        except KeyboardInterrupt:
+            break
         except:
             continue
         sleep(1)
 
 
 while True:
-    connection, address = server.accept()
-    print(f'{address[0]} connected')
-    thread = threading.Thread(target=clientThread, args=(connection, address))
-    thread.start()
-    sleep(1)
+    try:
+        connection, address = server.accept()
+        name = f"{address[0]} ({address[1]})"
+        print(f'{name} connected')
+        thread = threading.Thread(target=clientThread, args=(connection, address))
+        thread.start()
+        sleep(1)
+    except KeyboardInterrupt:
+        break
